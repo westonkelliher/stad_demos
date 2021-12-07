@@ -94,6 +94,12 @@ impl Stad {
         let b_extend = minus(self.b, towards_vec_plus);
         graphics::Mesh::new_line(ctx, &[a_extend, b_extend], thickness, color)
     }
+
+    fn get_perpendicular_segment(&self, ctx: &mut Context, p: Point2<f32>,
+                                 color: graphics::Color, thickness: f32)
+                                 -> GameResult<graphics::Mesh> {
+        
+    }
 }
 
 
@@ -237,7 +243,10 @@ impl EventHandler<ggez::GameError> for MyGame {
 
 
 	// Draw perpendicular
-	
+	let orange = graphics::Color::new(0.9, 0.7, 0.15, 0.7);
+	let perpen = self.stad.get_perpendicular_segment(ctx, self.circ.a, orange,
+                                                         6.0)?;
+        ezdraw!(perpen);
 
 	// Draw selector indicators
         let circ_selec = graphics::Mesh::new_circle
