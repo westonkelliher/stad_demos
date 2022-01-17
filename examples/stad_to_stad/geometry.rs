@@ -206,8 +206,8 @@ impl Segment {
     
     // the line perpendicular to the stad that passes through p
     pub fn perpendicular_through(&self, p: Point) -> Line {
-	let perp_slope = self.p1.towards(self.p2).slope();
-	Line::from_point_slope(p, perp_slope)
+	let slope = self.p1.towards(self.p2).slope();
+	Line::from_point_slope(p, inverse(slope))
     }
 
     // the line perpendicular to the segment that passes through p1
@@ -246,9 +246,9 @@ impl Segment {
 	// TODO: fails if vertical
     }
 
-    pub fn distance_to_segment(&self, other: Segment, print: bool) -> f64 {
+    pub fn distance_to_segment(&self, other: Segment) -> f64 {
 	let intersec = self.line().intersection(other.line());
-	if print { println!("{}, {}", self.shadows_point(intersec), other.shadows_point(intersec)); }
+	//if print { println!("{}, {}", self.shadows_point(intersec), other.shadows_point(intersec)); }
 	match (self.shadows_point(intersec), other.shadows_point(intersec)) {
 	    (true, true)  => 0.0,
 	    (true, false) => self.line().distance_to_point(
@@ -305,6 +305,22 @@ pub struct Stad {
 }
 impl Stad {
 
+    pub fn new(x1: f64, y1: f64, mut x2: f64, mut y2: f64, r: f64) -> Stad {
+	// a cheap hack to avoid perfectly vertical slopes
+	// TODO: handle vertical slopes well
+	if x1 == x2 {
+	    x2 += 0.001;
+	}
+	if y1 == y2 {
+	    y2 += 0.001;
+	}
+	Stad {
+	    p1: Point{x:x1, y:y1},
+	    p2: Point{x:x2, y:y2},
+	    r: r,
+	}
+    }
+    
     pub fn segment(&self) -> Segment {
 	Segment {
 	    p1: self.p1,
@@ -312,8 +328,12 @@ impl Stad {
 	}
     }
 
-    pub fn collides_stad(&self, other: Stad, print: bool) -> bool {
-	self.segment().distance_to_segment(other.segment(), print) < self.r + other.r
+    pub fn line(&self) -> Line {
+	Line::from_point_point(self.p1, self.p2)
+    }
+
+    pub fn collides_stad(&self, other: Stad) -> bool {
+	self.segment().distance_to_segment(other.segment()) < self.r + other.r
     }
 }
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,7 +1,7 @@
 use ggez::{Context, ContextBuilder, GameResult, conf};
 use ggez::event::{self, EventHandler};
 use ggez::graphics;
-use ggez::graphics::{DrawMode, FillOptions};
+use ggez::graphics::{DrawMode};//, FillOptions};
 use ggez::input::mouse::MouseButton;
 use ggez::mint::Point2;
 
@@ -66,14 +66,39 @@ use geometry::*;
     }
 */
 
+static WINDOW_WIDTH : f64 = 1200.0;
+static WINDOW_HEIGHT: f64 = 1000.0;
+
+fn visible_segment_from_line(line: Line) -> Option<Segment> {
+    // The line (if it is visible) must pass through two borders of the window
+    let mut v = vec![];
+    if 0.0 <= line.x(0.0) && line.x(0.0) <= WINDOW_WIDTH  {
+	v.push(Point{x:line.x(0.0), y:0.0});
+    }
+    if 0.0 <  line.x(WINDOW_HEIGHT) && line.x(WINDOW_HEIGHT) <  WINDOW_WIDTH  {
+	v.push(Point{x:line.x(WINDOW_HEIGHT), y:WINDOW_HEIGHT});
+    }
+    if 0.0 <= line.y(0.0) && line.y(0.0)           <= WINDOW_HEIGHT {
+	v.push(Point{x:0.0,                     y:line.y(0.0)});
+    }
+    if 0.0 <  line.y(WINDOW_WIDTH) && line.y(WINDOW_WIDTH)   <  WINDOW_HEIGHT {
+	v.push(Point{x:WINDOW_WIDTH,          y:line.y(WINDOW_WIDTH)});
+    }
+    if v.len() == 2 {
+	Some(Segment {
+	    p1: v[0],
+	    p2: v[1],
+	})
+    } else {
+	None
+    }
+}
+
 
 struct MyGame {
     stad_a: Stad,
     stad_b: Stad,
     my_color: graphics::Color,
-    color1: graphics::Color,
-    color2: graphics::Color,
-    color3: graphics::Color,
     dragging: Option<usize>,
 }
 
@@ -89,8 +114,8 @@ fn main() -> Result<(), ggez::GameError> {
     };
 
     let my_window_mode = conf::WindowMode {
-	width: 1200.0,
-	height: 1200.0,
+	width: WINDOW_WIDTH as f32 + 10.0,
+	height: WINDOW_HEIGHT as f32 + 10.0,
 	maximized: false,
 	fullscreen_type: conf::FullscreenType::Windowed,
 	borderless: false,
@@ -120,14 +145,9 @@ fn main() -> Result<(), ggez::GameError> {
 impl MyGame {
     pub fn new(_ctx: &mut Context) -> MyGame {
         MyGame {
-	    stad_a: Stad { p1: Point{ x:100.0, y:100.0},
-			   p2: Point{ x:200.0, y:100.0}, r: 20.0},
-	    stad_b: Stad { p1: Point{ x:100.0, y:300.0},
-			   p2: Point{ x:300.0, y:300.0}, r: 120.0},
+	    stad_a: Stad::new(100.0,100.0, 200.0,100.0, 40.0),
+	    stad_b: Stad::new(100.0,300.0, 300.0,300.0, 120.0),
 	    my_color: graphics::Color::new(0.05, 0.7, 0.25, 0.8),
-	    color1: graphics::Color::new(0.1, 0.1, 0.1, 0.8),
-	    color2: graphics::Color::new(0.1, 0.1, 0.1, 0.8),
-	    color3: graphics::Color::new(0.1, 0.1, 0.1, 0.8),
 	    dragging: None,
 	}
     }
@@ -153,19 +173,13 @@ impl EventHandler<ggez::GameError> for MyGame {
         graphics::clear(ctx, graphics::Color::WHITE);
 
 	// Change color for collision
-	//if self.stad_a.collides_stad(self.stad_b, true) {
-	if self.stad_b.segment().shadows_point(self.stad_a.p1) {
+	if self.stad_a.collides_stad(self.stad_b) {
+	//if self.stad_b.segment().shadows_point(self.stad_a.p1) {
 	    self.my_color = graphics::Color::new(0.7, 0.45, 0.05, 0.8);
 	} else {
 	    self.my_color = graphics::Color::new(0.05, 0.7, 0.25, 0.8);
 	}
 
-
-	// draw indicators
-	let c1 = graphics::Mesh::new_circle(ctx, DrawMode::Fill(FillOptions::even_odd()),
-					    Point{x:800.0,y:700.0}.mint(), 20.0, 1.0, self.color1)?;
-	ezdraw!(c1);
-	
 	// Draw the stadiums
 	let my_stroke = match DrawMode::stroke((self.stad_a.r*2.0) as f32) {
 	    DrawMode::Stroke(so) => {
@@ -192,6 +206,14 @@ impl EventHandler<ggez::GameError> for MyGame {
 	ezdraw!(gstad_a);
 	ezdraw!(gstad_b);
 
+
+	// draw a line
+	let yellow = graphics::Color::new(0.9, 0.7, 0.15, 0.7);
+	let aline = self.stad_a.line();
+	let aaa = visible_segment_from_line(aline).unwrap();
+	let gaaa = graphics::Mesh::new_line(ctx, &[aaa.p1.mint(), aaa.p2.mint()],
+					    2.0, yellow)?;
+	ezdraw!(gaaa);
 
 	/*
 	// Draw parallel extension
