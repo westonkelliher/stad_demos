@@ -67,22 +67,24 @@ use geometry::*;
 */
 
 static WINDOW_WIDTH : f64 = 1200.0;
-static WINDOW_HEIGHT: f64 = 1000.0;
+static WINDOW_HEIGHT: f64 = 800.0;
 
 fn visible_segment_from_line(line: Line) -> Option<Segment> {
-    // The line (if it is visible) must pass through two borders of the window
+    // The line (if it is visible) will pass through two borders of the window 
+    // so we can use the two points where th line intersects the edges of the
+    // window
     let mut v = vec![];
     if 0.0 <= line.x(0.0) && line.x(0.0) <= WINDOW_WIDTH  {
 	v.push(Point{x:line.x(0.0), y:0.0});
     }
-    if 0.0 <  line.x(WINDOW_HEIGHT) && line.x(WINDOW_HEIGHT) <  WINDOW_WIDTH  {
+    if 0.0 < line.x(WINDOW_HEIGHT) && line.x(WINDOW_HEIGHT) < WINDOW_WIDTH {
 	v.push(Point{x:line.x(WINDOW_HEIGHT), y:WINDOW_HEIGHT});
     }
-    if 0.0 <= line.y(0.0) && line.y(0.0)           <= WINDOW_HEIGHT {
-	v.push(Point{x:0.0,                     y:line.y(0.0)});
+    if 0.0 <= line.y(0.0) && line.y(0.0) <= WINDOW_HEIGHT {
+	v.push(Point{x:0.0, y:line.y(0.0)});
     }
-    if 0.0 <  line.y(WINDOW_WIDTH) && line.y(WINDOW_WIDTH)   <  WINDOW_HEIGHT {
-	v.push(Point{x:WINDOW_WIDTH,          y:line.y(WINDOW_WIDTH)});
+    if 0.0 < line.y(WINDOW_WIDTH) && line.y(WINDOW_WIDTH) < WINDOW_HEIGHT {
+	v.push(Point{x:WINDOW_WIDTH, y:line.y(WINDOW_WIDTH)});
     }
     if v.len() == 2 {
 	Some(Segment {

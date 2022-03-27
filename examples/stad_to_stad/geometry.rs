@@ -246,7 +246,8 @@ impl Segment {
 	// TODO: fails if vertical
     }
 
-    pub fn distance_to_segment(&self, other: Segment) -> f64 {
+    // currently buggy
+    pub fn distance_to_segment_optimized(&self, other: Segment) -> f64 {
 	let intersec = self.line().intersection(other.line());
 	//if print { println!("{}, {}", self.shadows_point(intersec), other.shadows_point(intersec)); }
 	match (self.shadows_point(intersec), other.shadows_point(intersec)) {
@@ -269,6 +270,26 @@ impl Segment {
 	}
 	// How this function works is not obvious but I'm not keen on explaining it
 	// here ;)
+    }
+
+
+    pub fn is_overlap(&self, other: Segment) -> bool {
+	let iscn = self.line().intersection(other.line());
+	(iscn.x > self.p1.x)  != (iscn.x > self.p2.x) && // intersection falls between both points of self
+	(iscn.x > other.p1.x) != (iscn.x > other.p2.x)   // intersection falls between both points of other
+    }
+    
+    // check every distance of point to point and point to line and return the smallest one
+    pub fn distance_to_segment(&self, other: Segment) -> f64 {
+	if self.is_overlap(other) {
+	    return 0.0;
+	}
+	let d1 = self.distance_to_point(other.p1);
+	let d2 = self.distance_to_point(other.p2);
+	let d3 = other.distance_to_point(self.p1);
+	let d4 = other.distance_to_point(self.p2);
+	let v = vec![d1, d2, d3, d4, /*d5, d6, d7, d8*/];
+	return v.into_iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
     }
 }
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
